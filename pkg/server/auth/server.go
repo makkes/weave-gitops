@@ -136,7 +136,7 @@ func NewAuthServer(ctx context.Context, cfg AuthConfig) (*AuthServer, error) {
 		featureflags.Set(FeatureFlagOIDCAuth, FeatureFlagSet)
 	}
 
-	if featureflags.Get(FeatureFlagOIDCAuth) != FeatureFlagSet && featureflags.Get(FeatureFlagClusterUser) != FeatureFlagSet {
+	if !featureflags.GetBool(FeatureFlagOIDCAuth) && !featureflags.GetBool(FeatureFlagClusterUser) {
 		return nil, fmt.Errorf("Neither OIDC auth or local auth enabled, can't start")
 	}
 

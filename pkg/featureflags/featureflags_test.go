@@ -52,4 +52,22 @@ var _ = Describe("featureflags", func() {
 		Expect(GetFlags()).To(HaveKeyWithValue("OTHER_FLAG", "some value"))
 		Expect(GetFlags()).To(HaveLen(2))
 	})
+
+	Describe("GetBool", func() {
+		It("returns true when a flag is set", func() {
+			Set("TEST1", "true")
+			Set("TEST2", "TRUE")
+
+			Expect(GetBool("TEST1")).To(BeTrue())
+			Expect(GetBool("TEST2")).To(BeTrue())
+		})
+		It("returns false when a flag is not set, or set to false", func() {
+			Set("TESTA", "false")
+			Set("TESTB", "FALSE")
+
+			Expect(GetBool("TESTA")).To(BeFalse())
+			Expect(GetBool("TESTB")).To(BeFalse())
+			Expect(GetBool("TESTC")).To(BeFalse())
+		})
+	})
 })

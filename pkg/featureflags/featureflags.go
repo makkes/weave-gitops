@@ -18,6 +18,8 @@
 // featureflags endpoint on the frontend.
 package featureflags
 
+import "strings"
+
 var flags map[string]string = make(map[string]string)
 
 // Set sets one specific featureflag
@@ -32,6 +34,12 @@ func Set(key, value string) {
 // value.
 func Get(key string) string {
 	return flags[key]
+}
+
+// GetBool returns true if a flag is set, and has the value "true".
+// Otherwise false is returned.
+func GetBool(key string) bool {
+	return strings.ToLower(flags[key]) == "true"
 }
 
 // GetFlags returns all featureflags
