@@ -58,7 +58,7 @@ func (pg *BearerTokenPassthroughPrincipalGetter) Principal(r *http.Request) (*Us
 		return nil, fmt.Errorf("error: user token authentication failed")
 	}
 
-	return &UserPrincipal{Token: token}, nil
+	return NewUserPrincipal(Token(token)), nil
 }
 
 // NewJWTPassthroughCookiePrincipalGetter creates and returns a new
@@ -91,7 +91,7 @@ func (pg *JWTPassthroughCookiePrincipalGetter) Principal(r *http.Request) (*User
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse for passthrough: %w", err)
 	}
-	principal.Token = cookie.Value
+	principal.SetToken(cookie.Value)
 
 	return principal, nil
 }

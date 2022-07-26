@@ -21,7 +21,7 @@ func TestPassthroughPrincipalGetter(t *testing.T) {
 		cookie string
 		want   *auth.UserPrincipal
 	}{
-		{"JWT ID Token", token, &auth.UserPrincipal{ID: "example@example.com", Groups: []string{"testing"}, Token: token}},
+		{"JWT ID Token", token, auth.NewUserPrincipal(auth.ID("example@example.com"), auth.Groups([]string{"testing"}), auth.Token(token))},
 		{"no cookie value", "", nil},
 	}
 
