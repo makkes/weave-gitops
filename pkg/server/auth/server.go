@@ -69,8 +69,16 @@ type UserInfo struct {
 	Groups []string `json:"groups"`
 }
 
-// func InitAuthServer(ctx context.Context, log logr.Logger, rawKubernetesClient ctrlclient.Client, oidcConfig OIDCConfig, oidcSecret, devUser string, devMode bool, authMethods []string) (*AuthServer, error) {
-func InitAuthServer(ctx context.Context, log logr.Logger, rawKubernetesClient ctrlclient.Client, oidcConfig OIDCConfig, oidcSecret, devUser string, devMode bool) (*AuthServer, error) {
+func InitAuthServer(ctx context.Context, log logr.Logger, rawKubernetesClient ctrlclient.Client, oidcConfig OIDCConfig, oidcSecret, devUser string, devMode bool, authMethods []string) (*AuthServer, error) {
+	configuredMethods, err := ParseAuthMethodArray(authMethods)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(configuredMethods) == 0 {
+		return nil, fmt.Errorf("No authentication methods set")
+	}
+
 	if oidcSecret != DefaultOIDCAuthSecretName {
 		log.V(logger.LogLevelDebug).Info("Reading OIDC configuration from alternate secret", "secretName", oidcSecret)
 	}

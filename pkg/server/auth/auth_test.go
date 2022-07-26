@@ -202,6 +202,7 @@ func TestInitAuthServer(t *testing.T) {
 
 	initTests := []struct{
 		name string
+		authMethods []string
 		secrets []*corev1.Secret
 		cliOIDCConfig auth.OIDCConfig
 		oidcSecretName string
@@ -211,6 +212,7 @@ func TestInitAuthServer(t *testing.T) {
 	}{
 		{
 			name: "basic test",
+			authMethods: []string{"user-account", "oidc"},
 			secrets: []*corev1.Secret{
 				makeOIDCSecret(m.Config(), auth.DefaultOIDCAuthSecretName),
 				makeClusterUserSecret("my-secret-password", auth.ClusterUserAuthSecretName),
@@ -223,6 +225,7 @@ func TestInitAuthServer(t *testing.T) {
 		},
 		{
 			name: "OIDC Only",
+			authMethods: []string{"oidc"},
 			secrets: []*corev1.Secret{
 				makeOIDCSecret(m.Config(), auth.DefaultOIDCAuthSecretName),
 			},
@@ -234,6 +237,7 @@ func TestInitAuthServer(t *testing.T) {
 		},
 		{
 			name: "OIDC alt-secret",
+			authMethods: []string{"oidc"},
 			secrets: []*corev1.Secret{
 				makeOIDCSecret(m.Config(), "alternate-oidc-secret"),
 			},
@@ -245,6 +249,7 @@ func TestInitAuthServer(t *testing.T) {
 		},
 		{
 			name: "OIDC via CLI",
+			authMethods: []string{"oidc"},
 			secrets: []*corev1.Secret{},
 			cliOIDCConfig: auth.OIDCConfig{
 				IssuerURL: m.Config().Issuer,
@@ -259,6 +264,7 @@ func TestInitAuthServer(t *testing.T) {
 		},
 		{
 			name: "User only",
+			authMethods: []string{"user-account"},
 			secrets: []*corev1.Secret{
 				makeClusterUserSecret("my-secret-password", auth.ClusterUserAuthSecretName),
 			},
@@ -268,10 +274,24 @@ func TestInitAuthServer(t *testing.T) {
 			clusterUserFlag: "true",
 			oidcEnabledFlag: "false",
 		},
+		{
+			name: "No auth methods",
+			authMethods: []string{},
+			secrets: []*corev1.Secret{},
+			cliOIDCConfig: auth.OIDCConfig{},
+			oidcSecretName: "",
+			expectErr: true,
+			clusterUserFlag: "false",
+			oidcEnabledFlag: "false",
+		},
 	}
 
 	for _, tt := range initTests {
 		t.Run( tt.name, func(t *testing.T){
+			// Reset feature flags for each run
+			featureflags.Set(auth.FeatureFlagClusterUser, "false")
+			featureflags.Set(auth.FeatureFlagOIDCAuth, "false")
+
 			partialKubernetesClient := ctrlclient.NewClientBuilder()
 
 			// This is because I can't (be bothered to) figure out how to []*secret -> []*client.Object
@@ -281,7 +301,7 @@ func TestInitAuthServer(t *testing.T) {
 
 			fakeKubernetesClient := partialKubernetesClient.Build()
 
-			srv, err := auth.InitAuthServer(context.Background(), logr.Discard(), fakeKubernetesClient, tt.cliOIDCConfig, tt.oidcSecretName, "", false)
+			srv, err := auth.InitAuthServer(context.Background(), logr.Discard(), fakeKubernetesClient, tt.cliOIDCConfig, tt.oidcSecretName, "", false, tt.authMethods)
 
 			if tt.expectErr {
 				g.Expect(err).To(HaveOccurred())
